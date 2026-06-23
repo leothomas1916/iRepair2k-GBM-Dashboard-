@@ -28,7 +28,6 @@ export enum PostType {
   UPDATE = "What's New / Update",
   OFFER = "Special Offer",
   EVENT = "Event / Workshops",
-  FESTIVAL = "Festival Poster",
 }
 
 export interface GBPPost {
@@ -51,10 +50,6 @@ export interface GBPPost {
     dateRange: string;
     description: string;
   };
-  festivalDetails?: {
-    festivalName: string;
-    festivalMessage: string;
-  };
 }
 
 export interface GeneratorConfig {
@@ -62,5 +57,6 @@ export interface GeneratorConfig {
   services: RepairService[];
   intent?: RepairIntent | string;
   tone?: string;
-  festivalName?: string;
+  seoKeywords?: string[];
+  targetGeoUrl?: string;
 }

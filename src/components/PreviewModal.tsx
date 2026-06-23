@@ -79,8 +79,8 @@ export default function PreviewModal({ post, imageUrl, isOpen, onClose }: Props)
               {/* Image */}
               <div className="w-full aspect-square bg-zinc-100 border-y border-zinc-100 relative">
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-zinc-900 text-[10px] font-bold px-2.5 py-1 rounded shadow-sm z-10 uppercase tracking-widest border border-black/5 flex items-center gap-1.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${post.postType === "Special Offer" ? "bg-red-500" : post.postType === "Event / Workshops" ? "bg-blue-500" : post.postType === "Festival Poster" ? "bg-purple-500" : "bg-emerald-500"}`}></div>
-                  {post.postType === "Special Offer" ? "Offer" : post.postType === "Event / Workshops" ? "Event" : post.postType === "Festival Poster" ? "Festival" : "Update"}
+                  <div className={`w-1.5 h-1.5 rounded-full ${post.postType === "Special Offer" ? "bg-red-500" : post.postType === "Event / Workshops" ? "bg-blue-500" : "bg-emerald-500"}`}></div>
+                  {post.postType === "Special Offer" ? "Offer" : post.postType === "Event / Workshops" ? "Event" : "Update"}
                 </div>
                 {imageUrl ? (
                   <img src={imageUrl} alt="Post" className="w-full h-full object-cover" />

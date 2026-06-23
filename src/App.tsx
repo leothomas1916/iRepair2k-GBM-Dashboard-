@@ -9,7 +9,6 @@ import GeneratorForm from "./components/GeneratorForm";
 import PostDisplay from "./components/PostDisplay";
 import GoogleMapsChecklist from "./components/GoogleMapsChecklist";
 import LocalInsights from "./components/LocalInsights";
-import PremiumFeatures from "./components/PremiumFeatures";
 import { GBPPost, GeneratorConfig } from "./types";
 import { generateGBPPost } from "./services/postService";
 import { motion } from "motion/react";
@@ -147,8 +146,6 @@ export default function App() {
           </div>
 
         </div>
-        
-        <PremiumFeatures />
       </main>
 
       <footer className="py-8 px-6 border-t border-zinc-900 bg-zinc-950 mt-12 relative z-10">

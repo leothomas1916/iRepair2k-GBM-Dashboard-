@@ -3,7 +3,7 @@ import { TrendingUp, Users, MapPin, MousePointerClick, Phone } from "lucide-reac
 export default function LocalInsights() {
   const stats = [
     { label: "Competitor Profile Crossovers", value: "842", trend: "+45.5%", icon: Users },
-    { label: "MG Road/Halasuru Directions", value: "481", trend: "+12.2%", icon: MapPin },
+    { label: "Saraswathi Puram / Halasuru Directions", value: "481", trend: "+12.2%", icon: MapPin },
     { label: "Apple Repair Clicks", value: "1,204", trend: "+28.4%", icon: MousePointerClick },
     { label: "Call Button Clicks", value: "284", trend: "+5.1%", icon: Phone },
   ];

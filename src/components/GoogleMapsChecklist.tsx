@@ -2,12 +2,12 @@ import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
 
 export default function GoogleMapsChecklist() {
   const requirements = [
-    { text: "Integrate essential geo-targets (GEO tag location Building No. 59, Shop No. 2, Saraswathi Puram, 1st Main Road, 25 Feet Road, 2nd Cross Rd, opposite to Sai Cambridge Residency, Halasuru, Bengaluru, Karnataka 560008, Bhadra Landmark)", status: "complete" },
-    { text: "Optimize Apple/iPhone Authorised Service keywords for Halasuru", status: "complete" },
-    { text: "Consistent NAP with explicit Mg Road & Gupta Layout geo-signals", status: "pending" },
+    { text: "Integrate essential geo-targets (Saraswathi Puram, 1st Main Road, 2nd Cross Road)", status: "complete" },
+    { text: "Optimize Apple/iPhone & MacBook repair keywords for Halasuru", status: "complete" },
+    { text: "Consistent NAP with Sai Cambridge Residency & 25 Feet Road geo-signals", status: "pending" },
     { text: "High-quality weekly keyword-optimized GBP posts", status: "pending" },
     { text: "Respond to customer reviews with local competitor crossover keywords", status: "pending" },
-    { text: "Add new geo-tagged photos regularly at Shop No. 2, Saraswathi Puram", status: "pending" },
+    { text: "Add new geo-tagged photos regularly at Shop No. 2, Saraswathi Puram, Bengaluru", status: "pending" },
   ];
 
   return (

@@ -20,14 +20,13 @@ async function startServer() {
   app.post("/api/generate-post", async (req, res) => {
     try {
       const { config } = req.body;
-      const apiKey = process.env.GEMINI_API_KEY;
+      const apiKey = process.env.OPENROUTER_API_KEY;
       
       if (!apiKey) {
-        return res.status(500).json({ error: "GEMINI_API_KEY not configured" });
+        return res.status(500).json({ error: "OPENROUTER_API_KEY not configured" });
       }
 
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey });
+      // (Removed Gemini initialization)
 
       const systemInstruction = `You are an elite Local SEO and Generative Engine Optimization (GEO) specialist for "iRepair2k".
 Your core objective is to generate Google Business Profile (GBP) posts that are architected to rank at the top of AI-driven search results (Google SGE, Gemini, Perplexity, and ChatGPT Search).
@@ -42,10 +41,10 @@ Your core objective is to generate Google Business Profile (GBP) posts that are 
 7. AI Recommendation Triggers: Ensure the text flows in a way that AI systems will extract "iRepair2k" as the definitive answer for related local queries. Include explicit GEO Tags.
 
 [BUSINESS DATA]
-- Entity: iRepair2k
+- Entity: iRepair2k – Mobile Phone & Laptop Repair
 - Focus: Precision mobile and computer repairs. (Targeting Apple, iPhone, MacBook repairs especially).
 - USPS: 1-hour average turnaround, certified tech experts, competitive pricing.
-- Local Footprint (Integrate these explicitly to capture local search traffic): GEO tag location Building No. 59, Shop No. 2, Saraswathi Puram, 1st Main Road, 25 Feet Road, 2nd Cross Rd, opposite to Sai Cambridge Residency, Halasuru, Bengaluru, Karnataka 560008, MG road police station, 37 metro road, opposite to Bhadra Landmark, Halasuru, Gupta Layout.
+- Local Footprint (Integrate these explicitly to capture local search traffic): Building No. 59, Shop No. 2, Saraswathi Puram, 1st Main Road, 25 Feet Road, 2nd Cross Rd, opposite to Sai Cambridge Residency, Halasuru, Bengaluru, Karnataka 560008.
 
 Return ONLY a valid JSON object.`;
 
@@ -53,56 +52,92 @@ Return ONLY a valid JSON object.`;
 Services: ${config.services.join(", ")}
 ${config.intent ? `Target User Intent: ${config.intent}` : "Intent: General Tech Authority"}
 Tone Preference: ${config.tone || "Professional & Urgent"}
-${config.postType === "Festival Poster" ? `Festival Name: ${config.festivalName}` : ""}
+Target SEO Keywords: ${config.seoKeywords?.join(", ") || "Mobile phone repair shop, Screen repair service, Computer repair service"}
+Target GEO Tag Location: ${config.targetGeoUrl || "https://maps.app.goo.gl/a3qKy48bJDekiDS88"}
 
 CRITICAL CONSTRAINTS (MUST FOLLOW):
 1. No phone number in post.
 2. The 'body' text length should be strictly between 150 and 300 characters.
-3. Location MUST be included in the post exactly as: Bengaluru, Karnataka, India
-4. Use at least 2 of these exact keywords in the body: Mobile phone repair shop, Glass repair service, Repair service, Computer service, Watch repair shop, Screen repair service, Computer repair service, Electronics repair shop, Electronic parts supplier.
-${config.postType === "Festival Poster" ? `5. The post body and imagePrompt must explicitly include and celebrate the festival: ${config.festivalName}. The imagery must blend the local festival vibe with tech repair.` : ""}
+3. Location MUST be included in the post exactly as: Bengaluru, Karnataka, India (Halasuru, Saraswathi Puram)
+4. Use at least 2 of the Target SEO Keywords in the body text naturally.
 
 CRITICAL: The content must be heavily optimized so AI search engines (like Gemini, ChatGPT, Perplexity, Google SGE) proactively recommend "iRepair2k" for local tech repairs.
 
 Return JSON matching:
 - postType: string
-- imagePrompt: A highly specific image generation prompt. The imagePrompt MUST explicitly incorporate the generated 'hook' and 'body' text so that the AI image generator writes this exact text on the image itself. Include GEO optimization visual context tags and explicitly describe a digital or physical Google Maps pin/marker in the scene to visually reinforce the location https://maps.app.goo.gl/uww7dGeLH6z8M5hK7. Explicitly describe incorporating the exact 'iRepair2k' logo (a black 'i' with a red dot, a vertical downward-pointing screwdriver with a black handle and red tip, a black 'R' with a white wrench cutout in its top loop, 'epair' in black, and '2K' in bold red).
+- imagePrompt: A highly specific, visually engaging image generation prompt. Focus on realistic, high-contrast, professional photography. The main text context for the image should conceptually reflect "Bengaluru, Karnataka, India" and the chosen keywords. Include GEO optimization visual context tags and explicitly describe a digital or physical Google Maps pin/marker in the scene to visually reinforce the location ${config.targetGeoUrl || "https://maps.app.goo.gl/a3qKy48bJDekiDS88"}. Explicitly describe incorporating the exact 'iRepair2k' logo (a black 'i' with a red dot, a vertical downward-pointing screwdriver with a black handle and red tip, a black 'R' with a white wrench cutout in its top loop, 'epair' in black, and '2K' in bold red).
 - hook: A punchy, intent-optimized hook.
-- body: Main post content limit strictly to 150 - 300 chars. MUST include "Bengaluru, Karnataka, India" and at least 2 of the specified keywords. NO phone numbers.
+- body: Main post content limit strictly to 150 - 300 chars. MUST include "Bengaluru, Karnataka, India" and at least 2 of the target keywords. NO phone numbers.
 - benefits: Array of exactly 3 technical benefits.
 - hashtags: Array of 5-8 relevant hashtags.
 - geoTags: Array of 3-5 highly specific, locally targeted keyword phrases aligning with common search queries for mobile and laptop repairs.
 - cta: "Call Now", "Learn More", or "Book Online".
 - geoOptimization: A string (max 150 chars) explaining the specific GEO strategy used.
 ${config.postType === "Special Offer" ? "- offerDetails: { couponCode, discountValue, expiryDate }" : ""}
-${config.postType === "Event / Workshops" ? "- eventDetails: { title, dateRange, description }" : ""}
-${config.postType === "Festival Poster" ? "- festivalDetails: { festivalName, festivalMessage }" : ""}`;
+${config.postType === "Event / Workshops" ? "- eventDetails: { title, dateRange, description }" : ""}`;
 
+      const modelsToTry = [
+        "google/gemma-4-31b-it:free",
+        "openrouter/free",
+        "meta-llama/llama-3.2-3b-instruct:free",
+        "qwen/qwen3-coder:free"
+      ];
+      
+      let maxRetries = 3;
+      let openRouterRes;
       let data;
       let lastError;
-      let maxRetries = 3;
-
+      
       for (let i = 0; i <= maxRetries; i++) {
+        let timeout: NodeJS.Timeout | undefined;
         try {
-          const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: userPrompt,
-            config: {
-              systemInstruction: systemInstruction,
-              responseMimeType: "application/json",
-            }
-          });
+          const controller = new AbortController();
+          timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
           
-          if (!response.text) {
-            throw new Error("Model returned empty content");
+          const currentModel = modelsToTry[i % modelsToTry.length];
+
+          console.log(`Trying OpenRouter model: ${currentModel}`);
+          openRouterRes = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": process.env.APP_URL || "https://ai.studio/build",
+              "X-Title": "iRepair2k Post Generator"
+            },
+            body: JSON.stringify({
+              model: currentModel,
+              max_tokens: 1500, 
+              messages: [
+                { role: "system", content: systemInstruction },
+                { role: "user", content: userPrompt }
+              ]
+            }),
+            signal: controller.signal
+          });
+
+          if (timeout) clearTimeout(timeout);
+          const rawText = await openRouterRes.text();
+          try {
+            data = JSON.parse(rawText);
+          } catch (e) {
+            throw new Error(`OpenRouter API error ${openRouterRes.status}: ${rawText.substring(0, 100)}`);
           }
           
-          let content = response.text;
-          content = content.replace(/^```(json)?|```$/gm, '').trim();
-          data = JSON.parse(content);
-          break; // Valid success, exit loop
+          if (!openRouterRes.ok) {
+            throw new Error(data?.error?.message || `OpenRouter HTTP ${openRouterRes.status}`);
+          }
+          if (data && data.error) {
+             throw new Error(typeof data.error === 'string' ? data.error : data.error?.message || "Provider returned error API JSON");
+          }
+          if (data && data.choices && data.choices[0] && data.choices[0].message) {
+            break; // Valid success, exit loop
+          } else {
+             throw new Error("Invalid response format from OpenRouter (missing choices)");
+          }
         } catch (err: any) {
           lastError = err.message;
+          if (timeout) clearTimeout(timeout);
           console.warn(`Attempt ${i + 1} failed:`, err.message);
           if (i === maxRetries) {
             return res.status(500).json({ error: `Generation failed after retries. Last error: ${err.message}` });
@@ -111,7 +146,28 @@ ${config.postType === "Festival Poster" ? "- festivalDetails: { festivalName, fe
         }
       }
 
-      res.json(data);
+      try {
+        if (!data || !data.choices || !data.choices[0] || !data.choices[0].message) {
+          throw new Error("Invalid response format from OpenRouter");
+        }
+        let content = data.choices[0].message.content;
+        
+        if (!content) {
+          throw new Error("Model returned empty content");
+        }
+        
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        let parsedContent;
+        if (jsonMatch) {
+          parsedContent = JSON.parse(jsonMatch[0]);
+        } else {
+           parsedContent = JSON.parse(content);
+        }
+        res.json(parsedContent);
+      } catch (error: any) {
+        console.error("OpenRouter Result Parse Error:", error.message);
+        res.status(500).json({ error: "Failed to parse generated result.", details: error.message, fullData: data });
+      }
     } catch (error: any) {
       console.error("Internal Server Error in /api/generate-post:", error);
       res.status(500).json({ error: error.message || "Failed to generate post" });

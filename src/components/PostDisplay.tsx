@@ -47,9 +47,6 @@ export default function PostDisplay({ post }: Props) {
   useEffect(() => {
     setImageUrl(null);
     setImageError(null);
-    if (post && !isGeneratingImage && !imageUrl) {
-      handleGenerateImage();
-    }
   }, [post]);
 
   const handleConnectGoogle = async () => {
@@ -214,20 +211,9 @@ export default function PostDisplay({ post }: Props) {
             </div>
             <div>
               {imageUrl ? (
-                <div className="space-y-4">
-                  <div className="aspect-square w-full relative group">
-                    <img src={imageUrl} alt="AI Generation" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none" />
-                  </div>
-                  <div className="p-4 bg-zinc-900 border border-zinc-800 rounded-xl mx-4 mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                       <h4 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Image Generation Prompt</h4>
-                       <button onClick={() => handleCopy(post.imagePrompt, "prompt_text")} className="text-zinc-500 hover:text-white transition-colors">
-                         {copied === "prompt_text" ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                       </button>
-                    </div>
-                    <p className="text-xs text-zinc-400 italic">"{post.imagePrompt}"</p>
-                  </div>
+                <div className="aspect-square w-full relative group">
+                  <img src={imageUrl} alt="AI Generation" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" referrerPolicy="no-referrer" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent pointer-events-none" />
                 </div>
               ) : (
                 <div className="p-6 md:p-8">
