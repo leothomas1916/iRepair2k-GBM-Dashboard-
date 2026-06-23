@@ -264,8 +264,8 @@ export default function PostDisplay({ post }: Props) {
             <div className="pt-2">
               <h4 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3 border-b border-zinc-800/50 pb-2">Technical Capabilities</h4>
               <ul className="grid gap-2.5">
-                {post.benefits.map((benefit, i) => {
-                  const brandLogo = getBrandLogo(benefit);
+                {Array.isArray(post.benefits) && post.benefits.map((benefit, i) => {
+                  const brandLogo = getBrandLogo(benefit || "");
                   return (
                     <motion.li key={i} className="flex items-start gap-3.5 text-sm text-zinc-300 p-2.5 rounded-lg bg-zinc-900/30 hover:bg-zinc-900/70 border border-zinc-800/30 transition-colors">
                       {brandLogo ? (
@@ -283,11 +283,11 @@ export default function PostDisplay({ post }: Props) {
             <div className="flex flex-wrap gap-2 pt-2">
               {Array.isArray(post.hashtags) ? post.hashtags.map((tag, i) => (
                 <span key={i} className="text-xs font-medium text-zinc-400 hover:text-orange-400 cursor-default transition-colors">
-                  {tag.startsWith("#") ? tag : `#${tag}`}
+                  {tag && typeof tag === 'string' && tag.startsWith("#") ? tag : `#${tag}`}
                 </span>
               )) : typeof post.hashtags === 'string' ? (post.hashtags as string).split(' ').map((tag, i) => (
                 <span key={i} className="text-xs font-medium text-zinc-400 hover:text-orange-400 cursor-default transition-colors">
-                  {tag.startsWith("#") ? tag : `#${tag}`}
+                  {tag && typeof tag === 'string' && tag.startsWith("#") ? tag : `#${tag}`}
                 </span>
               )) : null}
             </div>

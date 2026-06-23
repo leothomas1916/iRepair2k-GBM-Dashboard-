@@ -136,7 +136,7 @@ export default function App() {
                       </div>
                       <div>
                         <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">GEO Signals</div>
-                        <div className="text-sm font-semibold text-zinc-200">MG Road / Pillar 125</div>
+                        <div className="text-sm font-semibold text-zinc-200">Saraswathi Puram / Halasuru</div>
                       </div>
                     </div>
                   </div>

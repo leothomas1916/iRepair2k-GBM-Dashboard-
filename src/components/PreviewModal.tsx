@@ -19,7 +19,7 @@ export default function PreviewModal({ post, imageUrl, isOpen, onClose }: Props)
 
   const formattedDate = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(new Date());
 
-  const fullContent = `${post.hook}\n\n${post.body}\n\nBenefits:\n${post.benefits.map(b => `- ${b}`).join("\n")}\n\n${Array.isArray(post.hashtags) ? post.hashtags.map((tag: string) => tag.startsWith("#") ? tag : `#${tag}`).join(" ") : ""}`;
+  const fullContent = `${post.hook || ""}\n\n${post.body || ""}\n\nBenefits:\n${Array.isArray(post.benefits) ? post.benefits.map(b => `- ${b}`).join("\n") : ""}\n\n${Array.isArray(post.hashtags) ? post.hashtags.map((tag: string) => tag && typeof tag === 'string' ? (tag.startsWith("#") ? tag : `#${tag}`) : "").join(" ") : ""}`;
 
   return (
     <AnimatePresence>
