@@ -72,8 +72,8 @@ export default function PostDisplay({ post }: Props) {
     setPublishMessage(null);
 
     const details = post.offerDetails ? `\nOFFER: ${post.offerDetails.discountValue} OFF with code ${post.offerDetails.couponCode}\nExpires: ${post.offerDetails.expiryDate}` : post.eventDetails ? `\nEVENT: ${post.eventDetails.title}\nDate: ${post.eventDetails.dateRange}` : "";
-    const tags = `\n\n${Array.isArray(post.hashtags) ? post.hashtags.map(t => t.startsWith("#") ? t : `#${t}`).join(" ") : ""}`;
-    const fullContent = `${post.hook}\n\n${post.body}${details}\n\nBenefits:\n${Array.isArray(post.benefits) ? post.benefits.map(b => `- ${b}`).join("\n") : ""}${tags}`;
+    const tags = `\n\n${post.hashtags.map(t => t.startsWith("#") ? t : `#${t}`).join(" ")}`;
+    const fullContent = `${post.hook}\n\n${post.body}${details}\n\nBenefits:\n${post.benefits.map(b => `- ${b}`).join("\n")}${tags}`;
 
     try {
       const response = await fetch('/api/publish-post', {
@@ -183,10 +183,9 @@ export default function PostDisplay({ post }: Props) {
             <div className="flex items-center -space-x-1.5 opacity-80 hover:opacity-100 transition-opacity">
               {["Apple", "Samsung", "Dell", "HP"].map((brand) => {
                 const config = BRAND_CONFIG[brand.toLowerCase()];
-                const Icon = config.icon;
                 return (
                   <div key={brand} className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-700 flex items-center justify-center shadow-md">
-                    <Icon className={`w-3.5 h-3.5 ${config.color}`} />
+                    <config.icon className={`w-3.5 h-3.5 ${config.color}`} />
                   </div>
                 );
               })}
@@ -279,13 +278,12 @@ export default function PostDisplay({ post }: Props) {
             <div className="pt-2">
               <h4 className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-3 border-b border-zinc-800/50 pb-2">Technical Capabilities</h4>
               <ul className="grid gap-2.5">
-                {Array.isArray(post.benefits) && post.benefits.map((benefit, i) => {
+                {post.benefits.map((benefit, i) => {
                   const brandLogo = getBrandLogo(benefit);
-                  const Icon = brandLogo?.icon;
                   return (
                     <motion.li key={i} className="flex items-start gap-3.5 text-sm text-zinc-300 p-2.5 rounded-lg bg-zinc-900/30 hover:bg-zinc-900/70 border border-zinc-800/30 transition-colors">
-                      {Icon ? (
-                        <div className="mt-0.5"><Icon className={`w-4 h-4 ${brandLogo?.color}`} /></div>
+                      {brandLogo ? (
+                        <div className="mt-0.5"><brandLogo.icon className={`w-4 h-4 ${brandLogo.color}`} /></div>
                       ) : (
                         <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-500/80 shrink-0" />
                       )}
@@ -308,7 +306,7 @@ export default function PostDisplay({ post }: Props) {
               )) : null}
             </div>
 
-            {Array.isArray(post.geoTags) && post.geoTags.length > 0 && (
+            {post.geoTags && post.geoTags.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-2 pb-6 border-b border-zinc-800/50">
                 <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mr-1 self-center">Targets:</span>
                 {post.geoTags.map((tag, i) => (
@@ -333,8 +331,8 @@ export default function PostDisplay({ post }: Props) {
               </button>
               <button 
                 onClick={() => {
-                  const tags = `\n\n${Array.isArray(post.hashtags) ? post.hashtags.map(t => t.startsWith("#") ? t : `#${t}`).join(" ") : ""}`;
-                  handleCopy(`${post.hook}\n\n${post.body}\n\nBenefits:\n${Array.isArray(post.benefits) ? post.benefits.map(b => `- ${b}`).join("\n") : ""}${tags}\n\nCTA: ${post.cta}`, "full");
+                  const tags = `\n\n${post.hashtags.map(t => t.startsWith("#") ? t : `#${t}`).join(" ")}`;
+                  handleCopy(`${post.hook}\n\n${post.body}\n\nBenefits:\n${post.benefits.map(b => `- ${b}`).join("\n")}${tags}\n\nCTA: ${post.cta}`, "full");
                 }}
                 className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-white transition-colors text-sm font-medium"
               >

@@ -16,13 +16,11 @@ export default function LocalInsights() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
+        {stats.map((stat, i) => (
           <div key={i} className="p-4 bg-zinc-950/50 rounded-xl border border-zinc-800/50 hover:border-zinc-700/80 transition-colors group">
             <div className="flex items-center gap-2 mb-3">
               <div className="p-1.5 bg-orange-500/10 rounded-md group-hover:bg-orange-500/20 transition-colors">
-                <Icon className="w-3.5 h-3.5 text-orange-500" />
+                <stat.icon className="w-3.5 h-3.5 text-orange-500" />
               </div>
               <span className="text-xs text-zinc-400 font-medium">{stat.label}</span>
             </div>
@@ -34,7 +32,7 @@ export default function LocalInsights() {
               </span>
             </div>
           </div>
-        )})}
+        ))}
       </div>
     </div>
   );

@@ -46,9 +46,7 @@ export default function GeneratorForm({ onGenerate, isGenerating }: Props) {
             { id: PostType.OFFER, icon: Tag, label: "Offer" },
             { id: PostType.EVENT, icon: CalendarDays, label: "Event" },
             { id: PostType.FESTIVAL, icon: PartyPopper, label: "Festival" },
-          ].map((type) => {
-            const Icon = type.icon;
-            return (
+          ].map((type) => (
             <button
               key={type.id}
               type="button"
@@ -59,10 +57,10 @@ export default function GeneratorForm({ onGenerate, isGenerating }: Props) {
                   : "bg-zinc-900/50 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800/40"
               }`}
             >
-              <Icon className={`w-5 h-5 ${postType === type.id ? 'text-orange-500' : 'text-zinc-500'}`} />
+              <type.icon className={`w-5 h-5 ${postType === type.id ? 'text-orange-500' : 'text-zinc-500'}`} />
               <span className="uppercase tracking-wider">{type.label}</span>
             </button>
-          )})}
+          ))}
         </div>
       </div>
 

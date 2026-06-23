@@ -9,7 +9,6 @@ import GeneratorForm from "./components/GeneratorForm";
 import PostDisplay from "./components/PostDisplay";
 import GoogleMapsChecklist from "./components/GoogleMapsChecklist";
 import LocalInsights from "./components/LocalInsights";
-import IphoneServicesHighlight from "./components/IphoneServicesHighlight";
 import PremiumFeatures from "./components/PremiumFeatures";
 import { GBPPost, GeneratorConfig } from "./types";
 import { generateGBPPost } from "./services/postService";
@@ -120,7 +119,6 @@ export default function App() {
                   className="space-y-6"
                 >
                   <LocalInsights />
-                  <IphoneServicesHighlight />
                   <GoogleMapsChecklist />
                   
                   <div className="grid grid-cols-2 gap-4">

@@ -4,15 +4,15 @@
  */
 
 export enum RepairService {
-  IPHONE_SCREEN = "iPhone Screen Repair",
-  IPHONE_BATTERY = "iPhone Battery Replacement",
-  IPHONE_BACK_GLASS = "iPhone Back Glass Replacement",
-  MACBOOK_SCREEN = "Macbook Screen Replacement",
-  MACBOOK_MOTHERBOARD = "Macbook Motherboard Fix",
-  MACBOOK_BATTERY = "Macbook Battery Replacement",
-  ANDROID_DEVICES = "All Android Devices",
-  LAPTOP_REPAIR = "All Brand Laptop Repair",
-  WINDOWS_LAPTOP = "Windows Laptop Services",
+  IPHONE_SCREEN = "iPhone screen replacement",
+  IPHONE_BATTERY = "iPhone battery replacement",
+  IPHONE_BACK_GLASS = "iPhone back glass replacement",
+  MACBOOK_SCREEN = "Macbook screen replacement",
+  MACBOOK_MOTHERBOARD = "Macbook motherboard fix",
+  MACBOOK_BATTERY = "Macbook battery replacement",
+  ANDROID_DEVICES = "all android devices",
+  LAPTOP_REPAIR = "all brand laptop repair",
+  WINDOWS_LAPTOP = "windows laptop services",
 }
 
 export enum RepairIntent {

@@ -2,7 +2,7 @@ import { CheckCircle2, Circle, AlertCircle } from "lucide-react";
 
 export default function GoogleMapsChecklist() {
   const requirements = [
-    { text: "Integrate essential geo-targets (Metro Pillar 125, Bhadra Landmark)", status: "complete" },
+    { text: "Integrate essential geo-targets (GEO tag location Building No. 59, Shop No. 2, Saraswathi Puram, 1st Main Road, 25 Feet Road, 2nd Cross Rd, opposite to Sai Cambridge Residency, Halasuru, Bengaluru, Karnataka 560008, Bhadra Landmark)", status: "complete" },
     { text: "Optimize Apple/iPhone Authorised Service keywords for Halasuru", status: "complete" },
     { text: "Consistent NAP with explicit Mg Road & Gupta Layout geo-signals", status: "pending" },
     { text: "High-quality weekly keyword-optimized GBP posts", status: "pending" },
