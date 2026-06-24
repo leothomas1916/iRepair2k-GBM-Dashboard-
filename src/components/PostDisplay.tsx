@@ -69,8 +69,15 @@ export default function PostDisplay({ post }: Props) {
     setPublishMessage(null);
 
     const details = post.offerDetails ? `\nOFFER: ${post.offerDetails.discountValue} OFF with code ${post.offerDetails.couponCode}\nExpires: ${post.offerDetails.expiryDate}` : post.eventDetails ? `\nEVENT: ${post.eventDetails.title}\nDate: ${post.eventDetails.dateRange}` : "";
-    const tags = `\n\n${post.hashtags.map(t => t.startsWith("#") ? t : `#${t}`).join(" ")}`;
-    const fullContent = `${post.hook}\n\n${post.body}${details}\n\nBenefits:\n${post.benefits.map(b => `- ${b}`).join("\n")}${tags}`;
+    const tags = Array.isArray(post.hashtags) 
+      ? `\n\n${post.hashtags.map(t => typeof t === 'string' ? (t.startsWith("#") ? t : `#${t}`) : '').join(" ")}` 
+      : typeof post.hashtags === 'string' 
+        ? `\n\n${(post.hashtags as string).split(' ').map(t => t && t.startsWith("#") ? t : `#${t}`).join(" ")}`
+        : "";
+    const benefitsList = Array.isArray(post.benefits)
+      ? post.benefits.map(b => `- ${b}`).join("\n")
+      : "";
+    const fullContent = `${post.hook || ""}\n\n${post.body || ""}${details}\n\nBenefits:\n${benefitsList}${tags}`;
 
     try {
       const response = await fetch('/api/publish-post', {
@@ -317,8 +324,15 @@ export default function PostDisplay({ post }: Props) {
               </button>
               <button 
                 onClick={() => {
-                  const tags = `\n\n${post.hashtags.map(t => t.startsWith("#") ? t : `#${t}`).join(" ")}`;
-                  handleCopy(`${post.hook}\n\n${post.body}\n\nBenefits:\n${post.benefits.map(b => `- ${b}`).join("\n")}${tags}\n\nCTA: ${post.cta}`, "full");
+                  const tags = Array.isArray(post.hashtags) 
+                    ? `\n\n${post.hashtags.map(t => typeof t === 'string' ? (t.startsWith("#") ? t : `#${t}`) : '').join(" ")}` 
+                    : typeof post.hashtags === 'string' 
+                      ? `\n\n${(post.hashtags as string).split(' ').map(t => t && t.startsWith("#") ? t : `#${t}`).join(" ")}`
+                      : "";
+                  const benefitsList = Array.isArray(post.benefits)
+                    ? post.benefits.map(b => `- ${b}`).join("\n")
+                    : "";
+                  handleCopy(`${post.hook || ""}\n\n${post.body || ""}\n\nBenefits:\n${benefitsList}${tags}\n\nCTA: ${post.cta || ""}`, "full");
                 }}
                 className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-white transition-colors text-sm font-medium"
               >
