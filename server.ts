@@ -54,6 +54,7 @@ ${config.intent ? `Target User Intent: ${config.intent}` : "Intent: General Tech
 Tone Preference: ${config.tone || "Professional & Urgent"}
 Target SEO Keywords: ${config.seoKeywords?.join(", ") || "Mobile phone repair shop, Screen repair service, Computer repair service"}
 Target GEO Tag Location: ${config.targetGeoUrl || "https://maps.app.goo.gl/a3qKy48bJDekiDS88"}
+${config.routeSnippet ? `Real Google Maps Route & Directions Data (Incorporate this naturally in the body or benefits to create high-quality directional SEO signals): ${config.routeSnippet}` : ""}
 
 CRITICAL CONSTRAINTS (MUST FOLLOW):
 1. No phone number in post.
@@ -204,6 +205,239 @@ ${config.postType === "Event / Workshops" ? "- eventDetails: { title, dateRange,
     } catch (error) {
       console.error("Proxy Error:", error);
       res.status(500).send("Failed to proxy image");
+    }
+  });
+
+  // --- Auto-Post Cron Endpoint (Fixed and Robustified) ---
+  app.get("/api/cron", async (req, res) => {
+    // Security check for Cron
+    const authHeader = req.headers.authorization;
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).send("Unauthorized");
+    }
+
+    try {
+      // Use modern @google/genai SDK
+      const { GoogleGenAI, Type } = await import("@google/genai");
+      const ai = new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      // ====================================================================
+      // STEP 1: Generate Post Text & Image Prompt (Using JSON schema)
+      // ====================================================================
+      const prompt = `
+        You are the social media manager for iRepair2k in Bengaluru.
+        Write a promotional post (under 300 words) about one of these topics: 
+        1. MacBook motherboard repair
+        2. iPhone back glass laser replacement
+        3. Fast smartphone screen replacement
+        4. Liquid/Water damage recovery.
+        
+        Also, write a highly detailed image generation prompt that illustrates this topic. 
+        The image prompt should be for a photorealistic, high-tech repair shop setting.
+        
+        Return ONLY a JSON object in this format: 
+        { "postText": "...", "imagePrompt": "..." }
+      `;
+
+      const textResult = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              postText: { type: Type.STRING },
+              imagePrompt: { type: Type.STRING }
+            },
+            required: ["postText", "imagePrompt"]
+          }
+        }
+      });
+
+      const parsedJSON = JSON.parse(textResult.text || "{}");
+      const { postText, imagePrompt } = parsedJSON;
+
+      if (!postText || !imagePrompt) {
+        throw new Error("Failed to generate valid postText and imagePrompt from Gemini API.");
+      }
+
+      // ====================================================================
+      // STEP 2: Generate the Image using Imagen 3 with fallback
+      // ====================================================================
+      let base64Image = "";
+      
+      // Attempt 1: Modern @google/genai image model
+      try {
+        console.log("Attempting image generation using gemini-3.1-flash-image...");
+        const imgResult = await ai.models.generateContent({
+          model: 'gemini-3.1-flash-image',
+          contents: imagePrompt,
+          config: {
+            imageConfig: {
+              aspectRatio: "4:3",
+              imageSize: "1K"
+            }
+          }
+        });
+        for (const part of imgResult.candidates?.[0]?.content?.parts || []) {
+          if (part.inlineData) {
+            base64Image = part.inlineData.data;
+            break;
+          }
+        }
+      } catch (geminiImgError) {
+        console.warn("Modern Gemini image model failed, trying raw Imagen REST API...", geminiImgError);
+        
+        // Attempt 2: Legacy raw REST API for Imagen 3
+        try {
+          const imagenUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${process.env.GEMINI_API_KEY}`;
+          const imageResponse = await fetch(imagenUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              instances: [{ prompt: imagePrompt }],
+              parameters: { sampleCount: 1, aspectRatio: "4:3" }
+            })
+          });
+          
+          if (imageResponse.ok) {
+            const imageData = await imageResponse.json();
+            base64Image = imageData.predictions?.[0]?.bytesBase64Encoded || "";
+          }
+        } catch (restImgError) {
+          console.warn("REST Imagen API failed:", restImgError);
+        }
+      }
+
+      // Attempt 3: Free Pollinations.ai fallback (extremely reliable)
+      if (!base64Image) {
+        console.log("Using Pollinations.ai fallback...");
+        try {
+          const encodedPrompt = encodeURIComponent(imagePrompt);
+          const pollinationsUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1024&height=768&seed=${Math.floor(Math.random() * 1000000)}&nologo=true`;
+          const response = await fetch(pollinationsUrl);
+          if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer();
+            base64Image = Buffer.from(arrayBuffer).toString('base64');
+          }
+        } catch (pollinationsError) {
+          console.error("Pollinations.ai fallback failed:", pollinationsError);
+        }
+      }
+
+      if (!base64Image) {
+        throw new Error("Failed to generate an image after all attempts.");
+      }
+
+      // ====================================================================
+      // STEP 3: Upload Image to Firebase Storage to get a Public URL
+      // ====================================================================
+      let admin: any;
+      try {
+        admin = (await import("firebase-admin")).default;
+      } catch (e) {
+        console.error("Failed to import firebase-admin:", e);
+        throw e;
+      }
+
+      const fs = await import("fs");
+      const firebaseConfig = JSON.parse(fs.readFileSync(path.join(process.cwd(), "firebase-applet-config.json"), "utf8"));
+
+      if (admin.apps.length === 0) {
+        admin.initializeApp({
+          projectId: firebaseConfig.projectId,
+          storageBucket: firebaseConfig.storageBucket
+        });
+      }
+
+      const bucket = admin.storage().bucket();
+      const fileName = `auto-posts/post-${Date.now()}.png`;
+      const file = bucket.file(fileName);
+      
+      const buffer = Buffer.from(base64Image, 'base64');
+      await file.save(buffer, { contentType: 'image/png' });
+      
+      try {
+        await file.makePublic();
+      } catch (makePublicErr) {
+        console.warn("Could not make file public (Uniform Bucket-Level Access might be enabled):", makePublicErr);
+      }
+      
+      // Standard Firebase public download URL format as a 100% resilient fallback/alternative
+      const publicImageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
+
+      // ====================================================================
+      // STEP 4: Publish to Google Business Profile
+      // ====================================================================
+      const oauth2Client = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET
+      );
+      
+      if (!process.env.GOOGLE_REFRESH_TOKEN) {
+        throw new Error("GOOGLE_REFRESH_TOKEN environment variable is not configured.");
+      }
+      oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+
+      let locationName = 'accounts/YOUR_ACCOUNT_ID/locations/12987421374441698157';
+      
+      // Dynamically resolve account and location name if placeholders are present
+      try {
+        console.log("Resolving Google Business Profile account and location details...");
+        const accountRes = await oauth2Client.request({
+          url: 'https://mybusinessaccountmanagement.googleapis.com/v1/accounts'
+        });
+        const accounts = (accountRes.data as any).accounts;
+        if (accounts && accounts.length > 0) {
+          const accountId = accounts[0].name; // accounts/123
+          const locationsRes = await oauth2Client.request({
+            url: `https://mybusinessbusinessinformation.googleapis.com/v1/${accountId}/locations?readMask=name`
+          });
+          const locations = (locationsRes.data as any).locations;
+          if (locations && locations.length > 0) {
+            locationName = `${accountId}/${locations[0].name.split('/').pop()}`; // e.g. accounts/123/locations/456
+            console.log(`Resolved dynamically to: ${locationName}`);
+          }
+        }
+      } catch (resolveError) {
+        console.warn("Dynamic Google Business Profile account resolution failed, using defaults:", resolveError);
+      }
+
+      // Publish post using direct oauth2Client request to be extremely safe and robust against different googleapis versions
+      const postPayload = {
+        summary: postText,
+        topicType: 'STANDARD',
+        callToAction: {
+          actionType: 'CALL' 
+        },
+        media: [
+          {
+            mediaFormat: 'PHOTO',
+            sourceUrl: publicImageUrl
+          }
+        ]
+      };
+
+      console.log(`Publishing local post to GBP at ${locationName}...`);
+      const publishResponse = await oauth2Client.request({
+        url: `https://mybusinessbusinessinformation.googleapis.com/v1/${locationName}/localPosts`,
+        method: 'POST',
+        data: postPayload
+      });
+
+      res.json({ success: true, post: postText, imageUrl: publicImageUrl, publishResult: publishResponse.data });
+
+    } catch (error: any) {
+      console.error("Auto-post with image failed:", error);
+      res.status(500).json({ success: false, error: "Failed to auto-publish", details: error.message || String(error) });
     }
   });
 

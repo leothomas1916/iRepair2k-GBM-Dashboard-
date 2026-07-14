@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Check, Loader2, Sparkles, Megaphone, Tag, CalendarDays, MapPin, ExternalLink, Plus, Trash2 } from "lucide-react";
+import { Check, Loader2, Sparkles, Megaphone, Tag, CalendarDays, MapPin, ExternalLink, Plus, Trash2, Navigation } from "lucide-react";
 import { useState, FormEvent, KeyboardEvent } from "react";
 import { motion } from "motion/react";
 import { GeneratorConfig, RepairService, PostType } from "../types";
@@ -11,6 +11,8 @@ import { GeneratorConfig, RepairService, PostType } from "../types";
 interface Props {
   onGenerate: (config: GeneratorConfig) => void;
   isGenerating: boolean;
+  routeSnippet?: string;
+  onClearRouteSnippet?: () => void;
 }
 
 const ELITE_SEO_KEYWORDS = [
@@ -25,7 +27,7 @@ const ELITE_SEO_KEYWORDS = [
   "Laptop repair shop"
 ];
 
-export default function GeneratorForm({ onGenerate, isGenerating }: Props) {
+export default function GeneratorForm({ onGenerate, isGenerating, routeSnippet, onClearRouteSnippet }: Props) {
   const [postType, setPostType] = useState<PostType>(PostType.UPDATE);
   const [selectedServices, setSelectedServices] = useState<RepairService[]>([]);
   const [tone, setTone] = useState("Professional & Urgent");
@@ -79,7 +81,8 @@ export default function GeneratorForm({ onGenerate, isGenerating }: Props) {
       services: selectedServices, 
       tone,
       seoKeywords: selectedKeywords,
-      targetGeoUrl
+      targetGeoUrl,
+      routeSnippet
     });
   };
 
@@ -259,6 +262,32 @@ export default function GeneratorForm({ onGenerate, isGenerating }: Props) {
             </p>
           </div>
         </div>
+
+        {routeSnippet && (
+          <div className="p-3.5 bg-orange-500/5 border border-orange-500/20 rounded-xl relative group">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-1.5 mb-1 text-orange-400">
+                <Navigation className="w-3.5 h-3.5 text-orange-500 animate-pulse" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider font-mono">
+                  Live Route SEO Snippet Active
+                </span>
+              </div>
+              {onClearRouteSnippet && (
+                <button
+                  type="button"
+                  onClick={onClearRouteSnippet}
+                  className="text-zinc-500 hover:text-red-400 p-0.5 rounded transition-colors"
+                  title="Remove directions snippet"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <p className="text-[11px] leading-relaxed text-zinc-300 italic mt-1 bg-zinc-950/50 p-2 rounded border border-zinc-800/50">
+              "{routeSnippet}"
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Tone */}

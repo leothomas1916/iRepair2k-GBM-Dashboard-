@@ -9,15 +9,18 @@ import GeneratorForm from "./components/GeneratorForm";
 import PostDisplay from "./components/PostDisplay";
 import GoogleMapsChecklist from "./components/GoogleMapsChecklist";
 import LocalInsights from "./components/LocalInsights";
+import GoogleMapsExplorer from "./components/GoogleMapsExplorer";
 import { GBPPost, GeneratorConfig } from "./types";
 import { generateGBPPost } from "./services/postService";
 import { motion } from "motion/react";
-import { Info, MapPin, Search } from "lucide-react";
+import { Info, MapPin, Search, Compass } from "lucide-react";
 
 export default function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPost, setGeneratedPost] = useState<GBPPost | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeRightTab, setActiveRightTab] = useState<'preview' | 'map' | 'insights'>('map');
+  const [routeSnippet, setRouteSnippet] = useState<string | undefined>(undefined);
 
   const handleGenerate = async (config: GeneratorConfig) => {
     setIsGenerating(true);
@@ -25,6 +28,7 @@ export default function App() {
     try {
       const post = await generateGBPPost(config);
       setGeneratedPost(post);
+      setActiveRightTab('preview');
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Failed to generate post. Please check your connection and try again.");
@@ -61,7 +65,12 @@ export default function App() {
             <div className="p-[1px] rounded-[1.5rem] bg-gradient-to-br from-zinc-700/50 via-zinc-800/10 to-zinc-900/50 shadow-2xl overflow-hidden relative">
               <div className="absolute inset-0 bg-zinc-900/90 backdrop-blur-2xl z-0" />
               <div className="relative z-10 p-6 sm:p-8">
-                <GeneratorForm onGenerate={handleGenerate} isGenerating={isGenerating} />
+                <GeneratorForm 
+                  onGenerate={handleGenerate} 
+                  isGenerating={isGenerating} 
+                  routeSnippet={routeSnippet}
+                  onClearRouteSnippet={() => setRouteSnippet(undefined)}
+                />
               </div>
             </div>
 
@@ -86,19 +95,57 @@ export default function App() {
           {/* Right Column: Output */}
           <div className="lg:col-span-7">
             <div className="lg:sticky top-32 space-y-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5 px-3.5 py-1.5 bg-zinc-900/60 rounded-full border border-zinc-800/80 text-[10px] font-mono text-zinc-400 uppercase tracking-widest backdrop-blur-md">
+              
+              {/* Controls and Tab selector */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2.5 px-3.5 py-1.5 bg-zinc-900/60 rounded-full border border-zinc-800/80 text-[10px] font-mono text-zinc-400 uppercase tracking-widest backdrop-blur-md w-fit">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                   </span>
                   Live Generation Node
                 </div>
-                {error && (
-                  <span className="text-xs font-mono text-red-400 bg-red-400/10 border border-red-400/20 px-3 py-1.5 rounded-full">
-                    Error Detected //
-                  </span>
-                )}
+
+                {/* Tab Switcher */}
+                <div className="flex p-1 bg-zinc-900/60 rounded-xl border border-zinc-800/80 backdrop-blur-md">
+                  <button
+                    type="button"
+                    disabled={!generatedPost}
+                    onClick={() => setActiveRightTab('preview')}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      !generatedPost 
+                        ? 'opacity-30 cursor-not-allowed text-zinc-600'
+                        : activeRightTab === 'preview'
+                          ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                          : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    Post Preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveRightTab('map')}
+                    className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      activeRightTab === 'map'
+                        ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    <Compass className="w-3.5 h-3.5 mr-1" />
+                    Live Map
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveRightTab('insights')}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                      activeRightTab === 'insights'
+                        ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
+                        : 'text-zinc-400 hover:text-zinc-200'
+                    }`}
+                  >
+                    SEO Insights
+                  </button>
+                </div>
               </div>
 
               {error && (
@@ -107,41 +154,76 @@ export default function App() {
                 </div>
               )}
 
+              {/* Tab Content Rendering */}
               <div className="min-h-[600px]">
-                <PostDisplay post={generatedPost} />
+                {isGenerating ? (
+                  <motion.div
+                    key="generating"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="min-h-[500px] flex flex-col items-center justify-center bg-zinc-900/20 border border-zinc-800/80 rounded-2xl p-8 text-center space-y-4"
+                  >
+                    <div className="relative w-16 h-16">
+                      <div className="absolute inset-0 rounded-full border-4 border-zinc-800" />
+                      <div className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-semibold text-zinc-200">AI Local SEO Model Running</h4>
+                      <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+                        Weaving target keywords, custom services, and real Google Maps route signals into a high-converting profile post...
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : activeRightTab === 'preview' && generatedPost ? (
+                  <motion.div
+                    key="preview-tab"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="min-h-[600px]"
+                  >
+                    <PostDisplay post={generatedPost} />
+                  </motion.div>
+                ) : activeRightTab === 'map' ? (
+                  <motion.div
+                    key="map-tab"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <GoogleMapsExplorer onUseRouteForSEO={(snippet) => setRouteSnippet(snippet)} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="insights-tab"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-6"
+                  >
+                    <LocalInsights />
+                    <GoogleMapsChecklist />
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-5 bg-zinc-900/40 border border-zinc-800/80 rounded-2xl flex items-center gap-4 group hover:bg-zinc-800/40 transition-colors">
+                        <div className="bg-zinc-800/80 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                          <MapPin className="w-5 h-5 text-zinc-400 group-hover:text-orange-400 transition-colors" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">Competitor Lock</div>
+                          <div className="text-sm font-semibold text-zinc-200">Apple Service Intercept</div>
+                        </div>
+                      </div>
+                      <div className="p-5 bg-zinc-900/40 border border-zinc-800/80 rounded-2xl flex items-center gap-4 group hover:bg-zinc-800/40 transition-colors">
+                        <div className="bg-zinc-800/80 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                          <Search className="w-5 h-5 text-zinc-400 group-hover:text-blue-400 transition-colors" />
+                        </div>
+                        <div>
+                          <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">GEO Signals</div>
+                          <div className="text-sm font-semibold text-zinc-200">Saraswathi Puram / Halasuru</div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </div>
-              
-              {!generatedPost && !isGenerating && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="space-y-6"
-                >
-                  <LocalInsights />
-                  <GoogleMapsChecklist />
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-5 bg-zinc-900/40 border border-zinc-800/80 rounded-2xl flex items-center gap-4 group hover:bg-zinc-800/40 transition-colors">
-                      <div className="bg-zinc-800/80 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                        <MapPin className="w-5 h-5 text-zinc-400 group-hover:text-orange-400 transition-colors" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">Competitor Lock</div>
-                        <div className="text-sm font-semibold text-zinc-200">Apple Service Intercept</div>
-                      </div>
-                    </div>
-                    <div className="p-5 bg-zinc-900/40 border border-zinc-800/80 rounded-2xl flex items-center gap-4 group hover:bg-zinc-800/40 transition-colors">
-                      <div className="bg-zinc-800/80 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                        <Search className="w-5 h-5 text-zinc-400 group-hover:text-blue-400 transition-colors" />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-1">GEO Signals</div>
-                        <div className="text-sm font-semibold text-zinc-200">Saraswathi Puram / Halasuru</div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
             </div>
           </div>
 

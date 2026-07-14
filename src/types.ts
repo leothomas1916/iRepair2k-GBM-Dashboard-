@@ -59,4 +59,5 @@ export interface GeneratorConfig {
   tone?: string;
   seoKeywords?: string[];
   targetGeoUrl?: string;
+  routeSnippet?: string;
 }
