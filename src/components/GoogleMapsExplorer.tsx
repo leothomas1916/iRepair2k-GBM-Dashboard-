@@ -779,55 +779,8 @@ function InteractiveMap() {
       }
     }).catch(err => {
       const errMsg = err?.message || String(err);
-      console.warn("Places API (New) searchByText failed or is disabled. Trying legacy PlacesService fallback...", errMsg);
-
-      // Attempt legacy PlacesService search as fallback which is almost always enabled
-      if (map && google?.maps?.places?.PlacesService) {
-        try {
-          const service = new google.maps.places.PlacesService(map);
-          service.textSearch({
-            query: query,
-            location: SHOP_LAT_LNG,
-            radius: 5000
-          }, (results, status) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && results && results.length > 0) {
-              // Map the legacy results to the interface that the component expects
-              const mappedPlaces = results.map(p => ({
-                id: p.place_id || `legacy-${Math.random()}`,
-                displayName: p.name || "Unknown Location",
-                formattedAddress: p.formatted_address || "",
-                rating: p.rating,
-                userRatingCount: p.user_ratings_total,
-                location: p.geometry?.location ? {
-                  lat: p.geometry.location.lat(),
-                  lng: p.geometry.location.lng(),
-                  toJSON: () => ({ lat: p.geometry!.location.lat(), lng: p.geometry!.location.lng() })
-                } : null
-              }));
-
-              updateGlobalState({
-                searchResults: mappedPlaces as any,
-                isSearching: false,
-                selectedPlace: mappedPlaces[0] as any
-              });
-
-              if (globalState.isRouting && mappedPlaces[0]) {
-                calculateRoute(mappedPlaces[0] as any);
-              } else if (mappedPlaces[0]?.location) {
-                map.setCenter(mappedPlaces[0].location.toJSON());
-                map.setZoom(14);
-              }
-            } else {
-              triggerSandboxFallback(query, errMsg);
-            }
-          });
-        } catch (fallbackErr) {
-          console.warn("Legacy PlacesService fallback failed:", fallbackErr);
-          triggerSandboxFallback(query, errMsg);
-        }
-      } else {
-        triggerSandboxFallback(query, errMsg);
-      }
+      console.warn("Places API (New) searchByText failed or is disabled. Triggering sandbox fallback...", errMsg);
+      triggerSandboxFallback(query, errMsg);
     });
   };
 
@@ -943,76 +896,8 @@ function InteractiveMap() {
       }
     }).catch(err => {
       const errMsg = err?.message || String(err);
-      console.warn("Routes API (New) compute failed or is disabled. Trying legacy DirectionsService fallback...", errMsg);
-      
-      if (google?.maps?.DirectionsService) {
-        try {
-          const directionsService = new google.maps.DirectionsService();
-          directionsService.route({
-            origin: originLatLng,
-            destination: SHOP_LAT_LNG,
-            travelMode: google.maps.TravelMode.DRIVING
-          }, (result, status) => {
-            if (status === google.maps.DirectionsStatus.OK && result && result.routes && result.routes.length > 0) {
-              const route = result.routes[0];
-              const leg = route.legs[0];
-              
-              // Clear previous polylines
-              polylinesRef.current.forEach(p => p.setMap(null));
-              polylinesRef.current = [];
-
-              // Render directions route polyline
-              const polyline = new google.maps.Polyline({
-                path: route.overview_path,
-                strokeColor: '#f97316', // Orange-500
-                strokeOpacity: 0.85,
-                strokeWeight: 5.5,
-              });
-              polyline.setMap(map);
-              polylinesRef.current = [polyline];
-
-              // Collect directions steps
-              const steps: string[] = [];
-              if (leg.steps) {
-                leg.steps.forEach(step => {
-                  if (step.instructions) {
-                    steps.push(step.instructions);
-                  }
-                });
-              }
-
-              const distanceText = leg.distance?.text || `${((leg.distance?.value || 1000) / 1000).toFixed(1)} km`;
-              const durationText = leg.duration?.text || `${Math.ceil((leg.duration?.value || 300) / 60)} mins`;
-
-              const originName = originPlace.displayName || "Selected Origin";
-              
-              updateGlobalState({
-                isRouting: false,
-                activeRoute: {
-                  origin: originLatLng,
-                  destination: SHOP_LAT_LNG,
-                  distanceText,
-                  durationText,
-                  steps,
-                  originName
-                }
-              });
-
-              // Fit map bounds
-              if (route.bounds) {
-                map.fitBounds(route.bounds);
-              }
-            } else {
-              triggerSandboxRoutingFallback(originPlace, errMsg);
-            }
-          });
-        } catch (fallbackErr) {
-          console.warn("Legacy DirectionsService fallback failed:", fallbackErr);
-          triggerSandboxRoutingFallback(originPlace, errMsg);
-        }
-      } else {
-        triggerSandboxRoutingFallback(originPlace, errMsg);
-      }
+      console.warn("Routes API (New) compute failed or is disabled. Triggering sandbox fallback...", errMsg);
+      triggerSandboxRoutingFallback(originPlace, errMsg);
     });
   };
 
